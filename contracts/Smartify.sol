@@ -4,13 +4,13 @@ pragma solidity >=0.4.22 <0.9.0;
 contract Smartify {
   string public smartifySays;
   address public owner;
-  address public creator;
+  address payable public creator;
   uint256 public lastSaleAmount;
 
   constructor(string memory _smartifySays) public{
     smartifySays = _smartifySays;
 
-    creator = msg.sender;
+    creator = payable(msg.sender);
      owner = msg.sender;
 
 
@@ -30,9 +30,15 @@ contract Smartify {
 
 // Get all the balance inside the smart contract but only from owner
   function claim() public {
-    require(msg.sender == creator, "You are NOT my creator!");
+    require(msg.sender == creator, "You are not the creator!");
+    creator.transfer(address(this).balance);
   }
 
+function finalize() public  {
+      require(msg.sender == creator, "You are not the creator!");
+
+  selfdestruct(creator);
+}
 
 
 }

@@ -135,7 +135,7 @@ contract("Smartify", accounts => {
 
     describe('claim', () => {
         it('should fail for not creator', async () => {
-            await contract.claim({from: accounts[2]});
+
             try {
                 await contract.claim({from: accounts[2]});
                 expect.fail();
@@ -161,13 +161,48 @@ contract("Smartify", accounts => {
 
             expect(contractBalance.toString()).to.equal('0');
 
-console.log(creatorBalanceBeforeClaim, creatorBalanceAfterClaim)
-            // try {
-            //     await contract.claim({from: accounts[2]});
-            //     expect.fail();
-            // } catch(e){
-            //     expect(e.reason).to.equal('You are not the creator!')
-            // }
+            expect(Number(creatorBalanceBeforeClaim.toString())).to.be.below(Number(creatorBalanceAfterClaim.toString()))
+
+        })
+    })
+
+    describe('finalize', () => {
+        it('should fail for not creator', async () => {
+          
+            try {
+                await contract.finalize({from: accounts[2]});
+                expect.fail();
+            } catch(e){
+                expect(e.reason).to.equal('You are not the creator!')
+            }
+        })
+
+        it('should pay money to the creator', async () => {
+
+            const creatorBalanceBeforeClaim = await web3.eth.getBalance(creatorAddress)
+
+            const weiValue = web3.utils.toWei("1", "ether");
+
+            await contract.buy({from: accounts[0], value: weiValue})
+            await contract.finalize({from: creatorAddress});
+
+            const creatorBalanceAfterClaim = await web3.eth.getBalance(creatorAddress);
+            const contractBalance = await web3.eth.getBalance(contract.address);
+
+            expect(contractBalance.toString()).to.equal('0');
+            expect(Number(creatorBalanceBeforeClaim.toString())).to.be.below(Number(creatorBalanceAfterClaim.toString()))
+
+           
+
+        })
+
+
+        it('should not be able to interact after', async () => {
+
+            await contract.finalize({from: creatorAddress});
+            await contract.buy({from: accounts[0], value: 100})
+ 
+      
 
         })
     })
